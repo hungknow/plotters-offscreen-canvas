@@ -8,7 +8,6 @@ readme = "README.md"
 
 [dependencies]
 js-sys = "0.3.64"
-plotters-offscreen-canvas = { git = "https://github.com/hungknow/plotters-offscreen-canvas.git", version = "0.1.0" }
 wasm-bindgen = "0.2.87"
 
 [dependencies.plotters-backend]
