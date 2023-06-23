@@ -1,10 +1,12 @@
+use std::rc::Rc;
+
 use js_sys::JSON;
 use plotters_backend::{BackendColor, BackendStyle, DrawingBackend, DrawingErrorKind, FontTransform, text_anchor::HPos};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{OffscreenCanvas, OffscreenCanvasRenderingContext2d};
 
 pub struct OffscreenCanvasBackend {
-    canvas: OffscreenCanvas,
+    canvas: Rc<OffscreenCanvas>,
     context: OffscreenCanvasRenderingContext2d,
 }
 
@@ -25,7 +27,7 @@ impl std::fmt::Debug for CanvasError {
 impl std::error::Error for CanvasError {}
 
 impl OffscreenCanvasBackend {
-    fn init_backend(canvas: OffscreenCanvas) -> Option<Self> {
+    fn init_backend(canvas: Rc<OffscreenCanvas>) -> Option<Self> {
         let context: OffscreenCanvasRenderingContext2d =
             canvas.get_context("2d").ok()??.dyn_into().ok()?;
         Some(OffscreenCanvasBackend { canvas, context })
@@ -33,7 +35,7 @@ impl OffscreenCanvasBackend {
 
     /// Create a new drawing backend backed with an ofscreen canvas object
     ///  - Return either thte drawing backend, or non in error case
-    pub fn new(canvas: OffscreenCanvas) -> Option<Self> {
+    pub fn new(canvas: Rc<OffscreenCanvas>) -> Option<Self> {
         Self::init_backend(canvas)
     }
 
@@ -187,7 +189,7 @@ mod test {
     fn test_draw_pixel_alphas() {
         let (width, height) = (100_u32, 100_u32);
         let canvas = create_canvas(width, height);
-        let backend = OffscreenCanvasBackend::new(canvas).expect("cannot find canvas");
+        let backend = OffscreenCanvasBackend::new(Rc::new(canvas)).expect("cannot find canvas");
         let root = backend.into_drawing_area();
 
         for i in -20..20 {
@@ -204,7 +206,7 @@ mod test {
 
     fn draw_mesh_with_custom_ticks(tick_size: i32, _stest_name: &str) {
         let canvas = create_canvas(500, 500);
-        let backend = OffscreenCanvasBackend::new(canvas).expect("cannot find canvas");
+        let backend = OffscreenCanvasBackend::new(Rc::new(canvas)).expect("cannot find canvas");
         let root = backend.into_drawing_area();
 
         let mut chart = ChartBuilder::on(&root)
