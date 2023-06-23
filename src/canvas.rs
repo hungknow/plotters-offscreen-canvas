@@ -4,8 +4,8 @@ use plotters_backend::{BackendColor, BackendStyle, DrawingBackend, DrawingErrorK
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{OffscreenCanvas, OffscreenCanvasRenderingContext2d};
 
-pub struct OffscreenCanvasBackend {
-    canvas: Box<OffscreenCanvas>,
+pub struct OffscreenCanvasBackend<'a> {
+    canvas: &'a OffscreenCanvas,
     context: OffscreenCanvasRenderingContext2d,
 }
 
@@ -25,8 +25,8 @@ impl std::fmt::Debug for CanvasError {
 
 impl std::error::Error for CanvasError {}
 
-impl OffscreenCanvasBackend {
-    fn init_backend(canvas: Box<OffscreenCanvas>) -> Option<Self> {
+impl<'a> OffscreenCanvasBackend<'a> {
+    fn init_backend(canvas: &'a OffscreenCanvas) -> Option<Self> {
         let context: OffscreenCanvasRenderingContext2d =
             canvas.get_context("2d").ok()??.dyn_into().ok()?;
         Some(OffscreenCanvasBackend { canvas, context })
@@ -34,7 +34,7 @@ impl OffscreenCanvasBackend {
 
     /// Create a new drawing backend backed with an ofscreen canvas object
     ///  - Return either thte drawing backend, or non in error case
-    pub fn new(canvas: Box<OffscreenCanvas>) -> Option<Self> {
+    pub fn new(canvas: &'a OffscreenCanvas) -> Option<Self> {
         Self::init_backend(canvas)
     }
 
@@ -63,7 +63,7 @@ fn error_cast(e: JsValue) -> DrawingErrorKind<CanvasError> {
     ))
 }
 
-impl DrawingBackend for OffscreenCanvasBackend {
+impl<'a> DrawingBackend for OffscreenCanvasBackend<'a> {
     type ErrorType = CanvasError;
 
     fn ensure_prepared(&mut self) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
@@ -188,7 +188,7 @@ mod test {
     fn test_draw_pixel_alphas() {
         let (width, height) = (100_u32, 100_u32);
         let canvas = create_canvas(width, height);
-        let backend = OffscreenCanvasBackend::new(Box::new(canvas)).expect("cannot find canvas");
+        let backend = OffscreenCanvasBackend::new(&canvas).expect("cannot find canvas");
         let root = backend.into_drawing_area();
 
         for i in -20..20 {
@@ -205,7 +205,7 @@ mod test {
 
     fn draw_mesh_with_custom_ticks(tick_size: i32, _stest_name: &str) {
         let canvas = create_canvas(500, 500);
-        let backend = OffscreenCanvasBackend::new(Box::new(canvas)).expect("cannot find canvas");
+        let backend = OffscreenCanvasBackend::new(&canvas).expect("cannot find canvas");
         let root = backend.into_drawing_area();
 
         let mut chart = ChartBuilder::on(&root)
